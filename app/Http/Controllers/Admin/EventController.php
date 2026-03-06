@@ -1,0 +1,93 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Event;
+use Illuminate\Http\Request;
+
+class EventController extends Controller
+{
+    /**
+     * Display a listing of all events.
+     */
+    public function index()
+    {
+        $events = Event::withCount('registrations')->latest()->get();
+
+        return view('admin.events.index', compact('events'));
+    }
+
+    /**
+     * Show the form for creating a new event.
+     */
+    public function create()
+    {
+        return view('admin.events.create');
+    }
+
+    /**
+     * Store a newly created event.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'speaker' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
+            'total_seats' => 'required|integer|min:1',
+        ]);
+
+        Event::create($validated);
+
+        return redirect()->route('admin.events.index')
+            ->with('success', 'Event created successfully.');
+    }
+
+    /**
+     * Show the form for editing the specified event.
+     */
+    public function edit(Event $event)
+    {
+        return view('admin.events.edit', compact('event'));
+    }
+
+    /**
+     * Update the specified event.
+     */
+    public function update(Request $request, Event $event)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'speaker' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
+            'total_seats' => 'required|integer|min:1',
+        ]);
+
+        $event->update($validated);
+
+        return redirect()->route('admin.events.index')
+            ->with('success', 'Event updated successfully.');
+    }
+
+    /**
+     * Remove the specified event.
+     */
+    public function destroy(Event $event)
+    {
+        $event->delete();
+
+        return redirect()->route('admin.events.index')
+            ->with('success', 'Event deleted successfully.');
+    }
+
+    /**
+     * Display registered participants for a specific event.
+     */
+    public function participants(Event $event)
+    {
+        $event->load('registrations.user');
+
+        return view('admin.events.participants', compact('event'));
+    }
+}
